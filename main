@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Investment Table with Calculator</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .calculator {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .calculator input {
+            padding: 8px;
+            font-size: 16px;
+            width: 200px;
+            margin-right: 10px;
+        }
+        .calculator button {
+            padding: 8px 16px;
+            font-size: 16px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .calculator button:hover {
+            background-color: #0056b3;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        table th,
+        table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        table th {
+            background-color: #f4f4f4;
+            color: #333;
+            font-weight: bold;
+        }
+        table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        table tr:hover {
+            background-color: #f1f1f1;
+        }
+        footer {
+            text-align: center;
+            font-size: 0.9em;
+            color: #777;
+        }
+        #chartContainer {
+            max-width: 800px;
+            margin: 20px auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Investment Table with Calculator</h1>
+    <div class="calculator">
+        <input type="number" id="dcaAmount" placeholder="Enter DCA amount ($)" value="500">
+        <button onclick="calculateTable()">Calculate</button>
+    </div>
+    <div id="chartContainer">
+        <canvas id="investmentChart"></canvas>
+    </div>
+    <table id="investmentTable">
+        <thead>
+            <tr>
+                <th>Month-Year</th>
+                <th>Price ($)</th>
+                <th>Units Purchased</th>
+                <th>Cumulative Units Purchased</th>
+                <th>Value of Cumulative Units ($)</th>
+                <th>Total Invested ($)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Rows will be dynamically calculated -->
+        </tbody>
+    </table>
+    <footer>
+        Adjust the dollar-cost averaging (DCA) amount and see the changes reflected in the table and chart.
+    </footer>
+
+    <script>
+        // Data for the table (Feb 2025 to Feb 2032)
+        const data = [
+            { month: "Feb 2025", price: 88877 },
+            { month: "Mar 2025", price: 91900 },
+            { month: "Apr 2025", price: 94922 },
+            { month: "May 2025", price: 97945 },
+            { month: "Jun 2025", price: 100012 },
+            { month: "Jul 2025", price: 102500 },
+            { month: "Aug 2025", price: 105000 },
+            { month: "Sep 2025", price: 107500 },
+            { month: "Oct 2025", price: 110000 },
+            { month: "Nov 2025", price: 112500 },
+            { month: "Dec 2025", price: 115000 },
+            { month: "Jan 2026", price: 117500 },
+            { month: "Feb 2026", price: 120000 },
+            { month: "Mar 2026", price: 122500 },
+            { month: "Apr 2026", price: 125000 },
+            { month: "May 2026", price: 127500 },
+            { month: "Jun 2026", price: 130000 },
+            { month: "Jul 2026", price: 132500 },
+            { month: "Aug 2026", price: 135000 },
+            { month: "Sep 2026", price: 137500 },
+            { month: "Oct 2026", price: 140000 },
+            { month: "Nov 2026", price: 142500 },
+            { month: "Dec 2026", price: 145000 },
+            { month: "Jan 2027", price: 147500 },
+            { month: "Feb 2027", price: 150000 },
+            { month: "Mar 2027", price: 152500 },
+            { month: "Apr 2027", price: 155000 },
+            { month: "May 2027", price: 157500 },
+            { month: "Jun 2027", price: 160000 },
+            { month: "Jul 2027", price: 162500 },
+            { month: "Aug 2027", price: 165000 },
+            { month: "Sep 2027", price: 167500 },
+            { month: "Oct 2027", price: 170000 },
+            { month: "Nov 2027", price: 172500 },
+            { month: "Dec 2027", price: 175000 },
+            { month: "Jan 2028", price: 177500 },
+            { month: "Feb 2028", price: 180000 },
+            { month: "Mar 2028", price: 182500 },
+            { month: "Apr 2028", price: 185000 },
+            { month: "May 2028", price: 187500 },
+            { month: "Jun 2028", price: 190000 },
+            { month: "Jul 2028", price: 192500 },
+            { month: "Aug 2028", price: 195000 },
+            { month: "Sep 2028", price: 197500 },
+            { month: "Oct 2028", price: 200000 },
+            { month: "Nov 2028", price: 202500 },
+            { month: "Dec 2028", price: 205000 },
+            { month: "Jan 2029", price: 207500 },
+            { month: "Feb 2029", price: 210000 },
+            { month: "Mar 2029", price: 212500 },
+            { month: "Apr 2029", price: 215000 },
+            { month: "May 2029", price: 217500 },
+            { month: "Jun 2029", price: 220000 },
+            { month: "Jul 2029", price: 222500 },
+            { month: "Aug 2029", price: 225000 },
+            { month: "Sep 2029", price: 227500 },
+            { month: "Oct 2029", price: 230000 },
+            { month: "Nov 2029", price: 232500 },
+            { month: "Dec 2029", price: 235000 },
+            { month: "Jan 2030", price: 237500 },
+            { month: "Feb 2030", price: 240000 },
+            { month: "Mar 2030", price: 242500 },
+            { month: "Apr 2030", price: 245000 },
+            { month: "May 2030", price: 247500 },
+            { month: "Jun 2030", price: 250000 },
+            { month: "Jul 2030", price: 252500 },
+            { month: "Aug 2030", price: 255000 },
+            { month: "Sep 2030", price: 257500 },
+            { month: "Oct 2030", price: 260000 },
+            { month: "Nov 2030", price: 262500 },
+            { month: "Dec 2030", price: 265000 },
+            { month: "Jan 2031", price: 267500 },
+            { month: "Feb 2031", price: 270000 },
+            { month: "Mar 2031", price: 272500 },
+            { month: "Apr 2031", price: 275000 },
+            { month: "May 2031", price: 277500 },
+            { month: "Jun 2031", price: 280000 },
+            { month: "Jul 2031", price: 282500 },
+            { month: "Aug 2031", price: 285000 },
+            { month: "Sep 2031", price: 287500 },
+            { month: "Oct 2031", price: 290000 },
+            { month: "Nov 2031", price: 292500 },
+            { month: "Dec 2031", price: 295000 },
+            { month: "Jan 2032", price: 297500 },
+            { month: "Feb 2032", price: 300000 }
+        ];
+
+        // Function to calculate and update the table
+        function calculateTable() {
+            const dcaAmount = parseFloat(document.getElementById("dcaAmount").value);
+            const tableBody = document.querySelector("#investmentTable tbody");
+            tableBody.innerHTML = ""; // Clear table body
+
+            let cumulativeUnits = 0;
+            let totalInvested = 0;
+
+            data.forEach((entry) => {
+                const unitsPurchased = dcaAmount / entry.price;
+                cumulativeUnits += unitsPurchased;
+                totalInvested += dcaAmount;
+                const valueOfCumulativeUnits = Math.ceil(cumulativeUnits * entry.price); // Round up to the nearest $1
+
+                // Add a new row to the table
+                const row = `
+                    <tr>
+                        <td>${entry.month}</td>
+                        <td>${entry.price.toLocaleString()}</td>
+                        <td>${unitsPurchased.toFixed(8)}</td>
+                        <td>${cumulativeUnits.toFixed(8)}</td>
+                        <td>${valueOfCumulativeUnits}</td>
+                        <td>${totalInvested.toLocaleString()}</td>
+                    </tr>
+                `;
+                tableBody.innerHTML += row;
+            });
+
+            updateChart(dcaAmount);
+        }
+
+        // Function to update the chart
+        function updateChart(dcaAmount) {
+            const labels = data.map((entry) => entry.month);
+            const totalInvested = data.map((_, index) => (index + 1) * dcaAmount);
+            const cumulativeValue = data.map((entry, index) => {
+                let cumulativeUnits = 0;
+                for (let i = 0; i <= index; i++) {
+                    cumulativeUnits += dcaAmount / data[i].price;
+                }
+                return Math.ceil(cumulativeUnits * entry.price); // Round up to nearest $1
+            });
+
+            const ctx = document.getElementById("investmentChart").getContext("2d");
+            const investmentChart = new Chart(ctx, {
+                type: "line",
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: "Total Invested ($)",
+                            data: totalInvested,
+                            borderColor: "rgba(75, 192, 192, 1)",
+                            backgroundColor: "rgba(75, 192, 192, 0.2)",
+                            borderWidth: 2,
+                        },
+                        {
+                            label: "Value of Cumulative Units ($)",
+                            data: cumulativeValue,
+                            borderColor: "rgba(153, 102, 255, 1)",
+                            backgroundColor: "rgba(153, 102, 255, 0.2)",
+                            borderWidth: 2,
+                        },
+                    ],
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: "top",
+                        },
+                        title: {
+                            display: true,
+                            text: "Investment Growth Over Time",
+                        },
+                    },
+                },
+            });
+        }
+
+        // Initialize table and chart with default DCA amount
+        calculateTable();
+    </script>
+</body>
+</html>
